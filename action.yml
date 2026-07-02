@@ -1,5 +1,5 @@
 name: Set up skopeo environment
-author: warjiang
+author: gonmmarques
 description: |-
   Downloads, installs, and configures skopeo environment.
   Adds the `skopeo` CLI command to the $PATH.
@@ -22,5 +22,5 @@ inputs:
 #     description: 'Your output description here'
 
 runs:
-  using: node20
+  using: node24
   main: dist/index.js
