@@ -1,38 +1,75 @@
 import * as core from '@actions/core'
 import * as tc from '@actions/tool-cache'
-import { run } from '../src/main'
+import * as fs from 'node:fs'
+import * as os from 'node:os'
 import * as utils from '../src/utils'
+
+// Import after mocks are registered
+import { run } from '../src/main'
+
+jest.mock('node:fs', () => {
+  const actual = jest.requireActual<typeof import('node:fs')>('node:fs')
+  return {
+    ...actual,
+    mkdtempSync: jest.fn(),
+    promises: {
+      ...actual.promises,
+      chmod: jest.fn()
+    }
+  }
+})
+
+jest.mock('node:os', () => {
+  const actual = jest.requireActual<typeof import('node:os')>('node:os')
+  return {
+    ...actual,
+    tmpdir: jest.fn()
+  }
+})
+
+jest.mock('../src/utils', () => ({
+  getDownloadURL: jest.fn(),
+  getLatestVersion: jest.fn()
+}))
 
 describe('main.run', () => {
   beforeEach(() => {
-    jest.restoreAllMocks()
+    jest.clearAllMocks()
+    jest.mocked(fs.mkdtempSync).mockReturnValue('/tmp/skopeo-test')
+    jest.mocked(os.tmpdir).mockReturnValue('/tmp')
+    jest.mocked(fs.promises.chmod).mockResolvedValue(undefined)
     jest.spyOn(core, 'getInput').mockReturnValue('v1.2.3')
     jest.spyOn(core, 'debug').mockImplementation()
     jest.spyOn(core, 'info').mockImplementation()
     jest.spyOn(core, 'addPath').mockImplementation()
     jest.spyOn(core, 'setFailed').mockImplementation()
-    jest.spyOn(tc, 'downloadTool').mockResolvedValue('/tmp/skopeo')
+    jest.spyOn(tc, 'downloadTool').mockResolvedValue('/tmp/skopeo-test/skopeo')
     jest
-      .spyOn(utils, 'getDownloadURL')
+      .mocked(utils.getDownloadURL)
       .mockReturnValue('https://example.com/skopeo-v1.2.3')
   })
 
-  it('downloads the specified version and adds it to PATH', async () => {
+  it('downloads the specified version, makes it executable and adds it to PATH', async () => {
     await run()
 
     expect(core.getInput).toHaveBeenCalledWith('version')
     expect(utils.getDownloadURL).toHaveBeenCalledWith('v1.2.3')
+    expect(fs.mkdtempSync).toHaveBeenCalled()
     expect(tc.downloadTool).toHaveBeenCalledWith(
       'https://example.com/skopeo-v1.2.3',
-      './skopeo'
+      '/tmp/skopeo-test/skopeo'
     )
-    expect(core.addPath).toHaveBeenCalledWith('./skopeo')
+    expect(fs.promises.chmod).toHaveBeenCalledWith(
+      '/tmp/skopeo-test/skopeo',
+      0o755
+    )
+    expect(core.addPath).toHaveBeenCalledWith('/tmp/skopeo-test')
     expect(core.setFailed).not.toHaveBeenCalled()
   })
 
   it('resolves the latest version when the input is latest', async () => {
     jest.spyOn(core, 'getInput').mockReturnValue('latest')
-    jest.spyOn(utils, 'getLatestVersion').mockResolvedValue('v2.0.0')
+    jest.mocked(utils.getLatestVersion).mockResolvedValue('v2.0.0')
 
     await run()
 
@@ -54,7 +91,7 @@ describe('main.run', () => {
 
   it('marks the action as failed when resolving the latest version fails', async () => {
     jest.spyOn(core, 'getInput').mockReturnValue('latest')
-    jest.spyOn(utils, 'getLatestVersion').mockRejectedValue(new Error('nope'))
+    jest.mocked(utils.getLatestVersion).mockRejectedValue(new Error('nope'))
 
     await run()
 

@@ -94,9 +94,7 @@ describe('utils', () => {
         }
       }
 
-      jest
-        .spyOn(https, 'get')
-        .mockReturnValue(request as unknown as ReturnType<typeof https.get>)
+      jest.spyOn(https, 'get').mockReturnValue(request)
 
       await expect(
         getSupportedVersions('https://example.com/version.txt')

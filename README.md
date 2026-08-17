@@ -50,7 +50,7 @@ jobs:
   job_id:
     steps:
       - name: 'Set up skopeo'
-        uses: gonmmarques/setup-skopeo@v0.2.0
+        uses: gonmmarques/setup-skopeo@v0.3.0
         with:
           version: latest
 
@@ -68,6 +68,28 @@ jobs:
 - `version`: Optional. Set the skopeo version to install. Default: `latest`.
   More information about supported versions can be found in the [skopeo-binary
   version manifest][skopeo-binary-version].
+
+## How the binary is installed
+
+The action downloads the skopeo binary into a temporary tool directory on the
+runner, marks it executable, and adds that directory to the `PATH`. Call
+`skopeo` directly in later steps; there is no need to run `chmod` yourself.
+
+### Upgrading from v0.2.x
+
+Version `0.3.0` no longer writes the binary to `./skopeo` in the workspace. If
+your workflow referenced the binary by relative path, update your steps:
+
+```yaml
+# before (v0.2.x)
+run: |
+  chmod +x skopeo
+  ./skopeo copy ...
+
+# after (v0.3.0)
+run: |
+  skopeo copy ...
+```
 
 ## Why this fork exists
 
