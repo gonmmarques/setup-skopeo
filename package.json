@@ -1,16 +1,16 @@
 {
-  "name": "typescript-action",
-  "description": "GitHub Actions TypeScript template",
-  "version": "0.0.0",
-  "author": "",
+  "name": "setup-skopeo",
+  "description": "GitHub Action to install and configure the Skopeo CLI",
+  "version": "0.2.0",
+  "author": "gonmarq",
   "private": true,
-  "homepage": "https://github.com/actions/typescript-action",
+  "homepage": "https://github.com/gonmarq/setup-skopeo",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/gonmarq/setup-skopeo.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/typescript-action/issues"
+    "url": "https://github.com/gonmarq/setup-skopeo/issues"
   },
   "keywords": [
     "actions",

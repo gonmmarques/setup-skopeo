@@ -1,23 +1,45 @@
-# Setup skopeo in a GitHub Action
+# Set up Skopeo CLI
 
-[![GitHub Super-Linter](https://github.com/actions/typescript-action/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
-![CI](https://github.com/actions/typescript-action/actions/workflows/ci.yml/badge.svg)
-[![Check dist/](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml)
-[![CodeQL](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml)
-[![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
+[repo-actions]: https://github.com/gonmmarques/setup-skopeo/actions
+[linter-badge]:
+  https://github.com/gonmmarques/setup-skopeo/actions/workflows/linter.yml/badge.svg
+[ci-badge]:
+  https://github.com/gonmmarques/setup-skopeo/actions/workflows/ci.yml/badge.svg
+[dist-badge]:
+  https://github.com/gonmmarques/setup-skopeo/actions/workflows/check-dist.yml/badge.svg
+[codeql-badge]:
+  https://github.com/gonmmarques/setup-skopeo/actions/workflows/codeql-analysis.yml/badge.svg
+[coverage-badge]: ./badges/coverage.svg
+[coverage-link]: ./badges/coverage.svg
+[skopeo]: https://github.com/containers/skopeo
+[skopeo-binary]: https://github.com/lework/skopeo-binary
+[skopeo-binary-version]:
+  https://github.com/lework/skopeo-binary/blob/master/version.txt
+[actions-toolkit]: https://github.com/actions/toolkit
+[typescript-action]: https://github.com/actions/typescript-action
+[upstream-repo]: https://github.com/warjiang/setup-skopeo
+[upstream-pr]: https://github.com/warjiang/setup-skopeo/pull/36
 
-Use this action to setup environment of skopeo, and use skopeo to sync images
-across the registries. :rocket:
+[![GitHub Super-Linter][linter-badge]][repo-actions] ![CI][ci-badge]
+[![Check dist/][dist-badge]][repo-actions]
+[![CodeQL][codeql-badge]][repo-actions]
+[![Coverage][coverage-badge]][coverage-link]
+
+This action is a fork of [warjiang/setup-skopeo][upstream-repo]. It was kept
+alive because the upstream project was not being updated and released, and this
+maintained version keeps the action working and available for use. The original
+upstream change that led to this fork is tracked in
+[warjiang/setup-skopeo#36][upstream-pr].
+
+Use this action to install and configure the [skopeo][skopeo] CLI so you can
+sync images across registries.
 
 ## Prerequisites
 
-- Basic knowledge of Docker images and
-  [skopeo](https://github.com/containers/skopeo) which is a container tool to
-  sync images across the registries.
+- Basic knowledge of Docker images and [skopeo][skopeo], a container tool for
+  copying and syncing images across registries.
 - This action runs using Node 24. If you are using self-hosted GitHub Actions
-  runners, you must use a
-  [runner version](https://github.com/actions/virtual-environments) that
-  supports this version or newer.
+  runners, use a runner version that supports Node 24 or newer.
 
 ## Usage
 
@@ -26,7 +48,7 @@ jobs:
   job_id:
     steps:
       - name: 'Set up skopeo'
-        uses: warjiang/setup-skopeo@main
+        uses: gonmmarques/setup-skopeo@v0.2.0
         with:
           version: latest
 
@@ -41,16 +63,23 @@ jobs:
 
 ## Inputs
 
-- version: (Optional) Set the version of skopeo. Default: latest. More
-  information about supported versions can be found in the
-  [skopeo-binary version manifest](https://github.com/lework/skopeo-binary/blob/master/version.txt).
+- `version`: Optional. Set the skopeo version to install. Default: `latest`.
+  More information about supported versions can be found in the [skopeo-binary
+  version manifest][skopeo-binary-version].
+
+## Why this fork exists
+
+The upstream action was no longer being maintained and released, so this fork
+keeps the functionality available for users who still need a working setup
+action for skopeo.
 
 ## Credits
 
-- [skopeo-binary](https://github.com/lework/skopeo-binary): generate the skopeo
-  binary file, it fetches all the tags of official skopeo repository and
-  generate the binary file for each tag by a cronjob.
-- [actions/toolkit](https://github.com/actions/toolkit): some toolkits that are
-  very useful for GitHub Actions.
-- [actions/typescript-action](https://github.com/actions/typescript-action):
-  which is a template for creating a TypeScript action.
+- [skopeo][skopeo]: the upstream project this action installs and configures.
+- [skopeo-binary][skopeo-binary]: generates the binary artifacts used by the
+  action.
+- [actions/toolkit][actions-toolkit]: utilities used by GitHub Actions.
+- [actions/typescript-action][typescript-action]: the template used to bootstrap
+  the TypeScript action.
+- [warjiang/setup-skopeo][upstream-repo]: the original source this fork is based
+  on.
