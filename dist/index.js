@@ -6064,12 +6064,11 @@ const supportedArch = ['amd64', 'arm64'];
 const archAlias = {
     x64: 'amd64'
 };
-function getDownloadURL(version) {
-    const platform = os_1.default.platform();
+const defaultVersionURL = 'https://raw.githubusercontent.com/lework/skopeo-binary/master/version.txt';
+function getDownloadURL(version, platform = os_1.default.platform(), arch = os_1.default.arch()) {
     if (!supportedPlatform.includes(platform)) {
         throw new Error(`Unsupported platform: ${platform}`);
     }
-    const arch = os_1.default.arch();
     const aliasedArch = archAlias[arch] || arch;
     if (!supportedArch.includes(aliasedArch)) {
         throw new Error(`Unsupported arch: ${arch}`);
@@ -6077,27 +6076,31 @@ function getDownloadURL(version) {
     return `https://github.com/lework/skopeo-binary/releases/download/${version}/skopeo-${platform}-${aliasedArch}`;
 }
 exports.getDownloadURL = getDownloadURL;
-const url = 'https://raw.githubusercontent.com/lework/skopeo-binary/master/version.txt';
-async function getSupportedVersions() {
+async function getSupportedVersions(url = defaultVersionURL) {
     return new Promise((resolve, reject) => {
-        https_1.default.get(url, res => {
+        https_1.default
+            .get(url, res => {
+            if (!res) {
+                reject(new Error('No response received'));
+                return;
+            }
             let data = '';
             res.on('data', chunk => {
                 data += chunk;
             });
             res.on('end', () => {
-                resolve(data.trim().split('\n')); // Assuming the versions are separated by newlines
+                resolve(data.trim().split('\n').filter(Boolean));
             });
             res.on('error', err => {
                 reject(err);
             });
-        });
+        })
+            .on('error', reject);
     });
 }
 exports.getSupportedVersions = getSupportedVersions;
-async function getLatestVersion() {
-    const versions = await getSupportedVersions();
-    // assuming the versions are sorted in descending order
+async function getLatestVersion(versionProvider = getSupportedVersions) {
+    const versions = await versionProvider();
     if (versions.length === 0) {
         throw new Error('No versions found');
     }

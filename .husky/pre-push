@@ -1,0 +1,1 @@
+npm run lint && npx prettier --check "**/*.{ts,md,yml}" && npx jest --runInBand && npm run bundle && npm run coverage && git diff --exit-code -- dist badges/coverage.svg

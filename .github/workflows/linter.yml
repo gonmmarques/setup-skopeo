@@ -33,6 +33,8 @@ jobs:
 
       - name: Install Dependencies
         id: install
+        env:
+          HUSKY: 0
         run: npm ci
 
       - name: Lint TypeScript

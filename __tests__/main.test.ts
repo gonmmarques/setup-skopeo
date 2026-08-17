@@ -1,89 +1,63 @@
-/**
- * Unit tests for the action's main functionality, src/main.ts
- *
- * These should be run as if the action was called from a workflow.
- * Specifically, the inputs listed in `action.yml` should be set as environment
- * variables following the pattern `INPUT_<INPUT_NAME>`.
- */
-
 import * as core from '@actions/core'
-import * as main from '../src/main'
+import * as tc from '@actions/tool-cache'
+import { run } from '../src/main'
+import * as utils from '../src/utils'
 
-// Mock the action's main function
-const runMock = jest.spyOn(main, 'run')
-
-// Other utilities
-const timeRegex = /^\d{2}:\d{2}:\d{2}/
-
-// Mock the GitHub Actions core library
-let debugMock: jest.SpyInstance
-let errorMock: jest.SpyInstance
-let getInputMock: jest.SpyInstance
-let setFailedMock: jest.SpyInstance
-let setOutputMock: jest.SpyInstance
-
-describe('action', () => {
+describe('main.run', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-
-    debugMock = jest.spyOn(core, 'debug').mockImplementation()
-    errorMock = jest.spyOn(core, 'error').mockImplementation()
-    getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
-    setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
-    setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+    jest.restoreAllMocks()
+    jest.spyOn(core, 'getInput').mockReturnValue('v1.2.3')
+    jest.spyOn(core, 'debug').mockImplementation()
+    jest.spyOn(core, 'info').mockImplementation()
+    jest.spyOn(core, 'addPath').mockImplementation()
+    jest.spyOn(core, 'setFailed').mockImplementation()
+    jest.spyOn(tc, 'downloadTool').mockResolvedValue('/tmp/skopeo')
+    jest
+      .spyOn(utils, 'getDownloadURL')
+      .mockReturnValue('https://example.com/skopeo-v1.2.3')
   })
 
-  it('sets the time output', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'milliseconds':
-          return '500'
-        default:
-          return ''
-      }
-    })
+  it('downloads the specified version and adds it to PATH', async () => {
+    await run()
 
-    await main.run()
-    expect(runMock).toHaveReturned()
-
-    // Verify that all of the core library functions were called correctly
-    expect(debugMock).toHaveBeenNthCalledWith(1, 'Waiting 500 milliseconds ...')
-    expect(debugMock).toHaveBeenNthCalledWith(
-      2,
-      expect.stringMatching(timeRegex)
+    expect(core.getInput).toHaveBeenCalledWith('version')
+    expect(utils.getDownloadURL).toHaveBeenCalledWith('v1.2.3')
+    expect(tc.downloadTool).toHaveBeenCalledWith(
+      'https://example.com/skopeo-v1.2.3',
+      './skopeo'
     )
-    expect(debugMock).toHaveBeenNthCalledWith(
-      3,
-      expect.stringMatching(timeRegex)
-    )
-    expect(setOutputMock).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      expect.stringMatching(timeRegex)
-    )
-    expect(errorMock).not.toHaveBeenCalled()
+    expect(core.addPath).toHaveBeenCalledWith('./skopeo')
+    expect(core.setFailed).not.toHaveBeenCalled()
   })
 
-  it('sets a failed status', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation((name: string): string => {
-      switch (name) {
-        case 'milliseconds':
-          return 'this is not a number'
-        default:
-          return ''
-      }
-    })
+  it('resolves the latest version when the input is latest', async () => {
+    jest.spyOn(core, 'getInput').mockReturnValue('latest')
+    jest.spyOn(utils, 'getLatestVersion').mockResolvedValue('v2.0.0')
 
-    await main.run()
-    expect(runMock).toHaveReturned()
+    await run()
 
-    // Verify that all of the core library functions were called correctly
-    expect(setFailedMock).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds not a number'
+    expect(utils.getLatestVersion).toHaveBeenCalledTimes(1)
+    expect(core.debug).toHaveBeenCalledWith(
+      'Latest version of skopeo is v2.0.0'
     )
-    expect(errorMock).not.toHaveBeenCalled()
+    expect(core.info).toHaveBeenCalledWith('Version to be installed: v2.0.0')
+    expect(utils.getDownloadURL).toHaveBeenCalledWith('v2.0.0')
+  })
+
+  it('marks the action as failed when the download fails', async () => {
+    jest.spyOn(tc, 'downloadTool').mockRejectedValue(new Error('boom'))
+
+    await run()
+
+    expect(core.setFailed).toHaveBeenCalledWith('boom')
+  })
+
+  it('marks the action as failed when resolving the latest version fails', async () => {
+    jest.spyOn(core, 'getInput').mockReturnValue('latest')
+    jest.spyOn(utils, 'getLatestVersion').mockRejectedValue(new Error('nope'))
+
+    await run()
+
+    expect(core.setFailed).toHaveBeenCalledWith('nope')
   })
 })

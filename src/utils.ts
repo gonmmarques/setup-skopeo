@@ -6,44 +6,59 @@ const supportedArch = ['amd64', 'arm64']
 const archAlias: Record<string, string> = {
   x64: 'amd64'
 }
-export function getDownloadURL(version: string): string {
-  const platform = os.platform()
+const defaultVersionURL =
+  'https://raw.githubusercontent.com/lework/skopeo-binary/master/version.txt'
+
+export function getDownloadURL(
+  version: string,
+  platform: string = os.platform(),
+  arch: string = os.arch()
+): string {
   if (!supportedPlatform.includes(platform)) {
     throw new Error(`Unsupported platform: ${platform}`)
   }
-  const arch = os.arch()
+
   const aliasedArch = archAlias[arch] || arch
   if (!supportedArch.includes(aliasedArch)) {
     throw new Error(`Unsupported arch: ${arch}`)
   }
+
   return `https://github.com/lework/skopeo-binary/releases/download/${version}/skopeo-${platform}-${aliasedArch}`
 }
 
-const url =
-  'https://raw.githubusercontent.com/lework/skopeo-binary/master/version.txt'
-export async function getSupportedVersions(): Promise<string[]> {
+export async function getSupportedVersions(
+  url: string = defaultVersionURL
+): Promise<string[]> {
   return new Promise((resolve, reject) => {
-    https.get(url, res => {
-      let data = ''
+    https
+      .get(url, res => {
+        if (!res) {
+          reject(new Error('No response received'))
+          return
+        }
 
-      res.on('data', chunk => {
-        data += chunk
-      })
+        let data = ''
 
-      res.on('end', () => {
-        resolve(data.trim().split('\n')) // Assuming the versions are separated by newlines
-      })
+        res.on('data', chunk => {
+          data += chunk
+        })
 
-      res.on('error', err => {
-        reject(err)
+        res.on('end', () => {
+          resolve(data.trim().split('\n').filter(Boolean))
+        })
+
+        res.on('error', err => {
+          reject(err)
+        })
       })
-    })
+      .on('error', reject)
   })
 }
 
-export async function getLatestVersion(): Promise<string> {
-  const versions = await getSupportedVersions()
-  // assuming the versions are sorted in descending order
+export async function getLatestVersion(
+  versionProvider: () => Promise<string[]> = getSupportedVersions
+): Promise<string> {
+  const versions = await versionProvider()
   if (versions.length === 0) {
     throw new Error('No versions found')
   }

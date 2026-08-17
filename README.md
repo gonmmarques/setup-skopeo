@@ -9,8 +9,10 @@
   https://github.com/gonmmarques/setup-skopeo/actions/workflows/check-dist.yml/badge.svg
 [codeql-badge]:
   https://github.com/gonmmarques/setup-skopeo/actions/workflows/codeql-analysis.yml/badge.svg
-[coverage-badge]: ./badges/coverage.svg
-[coverage-link]: ./badges/coverage.svg
+[coverage-badge]:
+  https://raw.githubusercontent.com/gonmmarques/setup-skopeo/main/badges/coverage.svg
+[coverage-link]:
+  https://github.com/gonmmarques/setup-skopeo/blob/main/badges/coverage.svg
 [skopeo]: https://github.com/containers/skopeo
 [skopeo-binary]: https://github.com/lework/skopeo-binary
 [skopeo-binary-version]:
@@ -57,8 +59,8 @@ jobs:
           skopeo --version
           skopeo copy --dest-creds \
           ${{ secrets.DEST_REGISTRY_USER }}:${{ secrets.DEST_REGISTRY_PASSWORD }} \
-          docker://alpine:3.19 \
-          docker://${{ secrets.DEST_REGISTRY }}/alpine:3.19
+          docker://alpine:3.24 \
+          docker://${{ secrets.DEST_REGISTRY }}/alpine:3.24
 ```
 
 ## Inputs
@@ -72,6 +74,20 @@ jobs:
 The upstream action was no longer being maintained and released, so this fork
 keeps the functionality available for users who still need a working setup
 action for skopeo.
+
+## Local validation
+
+This repository uses Husky to enforce local checks before commit and push:
+
+- pre-commit: lint, formatting, and tests
+- pre-push: lint, formatting, tests, bundle, and coverage badge refresh
+
+After installing dependencies, the hooks are enabled automatically via the
+`prepare` script. If you need to re-enable them manually, run:
+
+```bash
+npx husky install
+```
 
 ## Credits
 

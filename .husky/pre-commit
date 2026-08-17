@@ -1,0 +1,1 @@
+npm run lint && npx prettier --check "**/*.{ts,md,yml}" && npx jest --runInBand
