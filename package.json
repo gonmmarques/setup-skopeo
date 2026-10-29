@@ -2,15 +2,15 @@
   "name": "setup-skopeo",
   "description": "GitHub Action to install and configure the Skopeo CLI",
   "version": "0.3.0",
-  "author": "gonmarq",
+  "author": "gonmmarques",
   "private": true,
-  "homepage": "https://github.com/gonmarq/setup-skopeo",
+  "homepage": "https://github.com/gonmmarques/setup-skopeo",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gonmarq/setup-skopeo.git"
+    "url": "git+https://github.com/gonmmarques/setup-skopeo.git"
   },
   "bugs": {
-    "url": "https://github.com/gonmarq/setup-skopeo/issues"
+    "url": "https://github.com/gonmmarques/setup-skopeo/issues"
   },
   "keywords": [
     "actions",
